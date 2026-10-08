@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>长三角三省一市行政区划与 G/S 道路网</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="map"></div>
+
+    <div id="panel" class="panel">
+        <h1>长三角三省一市</h1>
+        <p class="subtitle">江苏 · 浙江 · 安徽 · 上海 | 县/区级行政区划 + 国道/省道网</p>
+        <div id="status" class="status">初始化地图…</div>
+        <div class="legend">
+            <div class="legend-item"><span class="swatch province-border"></span>省界</div>
+            <div class="legend-item"><span class="swatch county-border"></span>县/区界</div>
+            <div class="legend-item"><span class="swatch road-g"></span>国道（G）</div>
+            <div class="legend-item"><span class="swatch road-s"></span>省道（S）</div>
+        </div>
+        <div class="actions">
+            <button id="btn-fit">重置视野</button>
+            <button id="btn-roads" disabled>加载道路网</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+    <script src="app.js"></script>
+</body>
+</html>
