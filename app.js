@@ -1,4 +1,4 @@
-  /**
+/**
    * 长三角三省一市行政区划 + 国道/省道网展示
    * 数据来源：DataV GeoAtlas（行政区划）、OpenStreetMap/Overpass（道路）
    */
@@ -24,8 +24,9 @@
   });
 
   const baseLayers = {
-    'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    'ESRI World Street':
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; <a href="https://www.esri.com/">Esri</a>',
       maxZoom: 19
     }).addTo(map)
   };
@@ -204,14 +205,18 @@
     try {
       const resp = await fetch(CONFIG.localRoads);
       if (resp.ok) {
-        geojson = await resp.json();
-        setStatus('已使用本地道路数据', 'success');
+        const data = await resp.json();
+        if (data && data.features && data.features.length) {
+          geojson = data;
+          setStatus('已使用本地道路数据', 'success');
+        }
       }
     } catch (e) {}
 
     if (!geojson) {
+      setStatus('本地无道路数据，尝试在线加载（可能受公司网络限制）…');
       try {
-        geojson = await fetchRoadsFromOverpass();
+        geojson = await fetchWithTimeout(fetchRoadsFromOverpass(), 15000);
         setStatus('已在线加载国道/省道路网', 'success');
       } catch (e) {
         setStatus('道路网加载失败：' + e.message, 'error');
@@ -224,6 +229,13 @@
 
     renderRoads(geojson);
     btn.textContent = '道路网已加载';
+  }
+
+  function fetchWithTimeout(promise, ms) {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时，请检查网络或稍后重试')), ms))
+    ]);
   }
 
   async function fetchRoadsFromOverpass() {
@@ -253,6 +265,42 @@
     data.elements.forEach(el => {
       if (el.type !== 'way') return;
       const tags = el.tags || {};
+      const ref = (tags.ref || '').trim();
+      if (!ref || !/^[GS]\d+/i.test(ref)) return;
+
+      const coords = el.nodes.map(id => nodes[id]).filter(Boolean);
+      if (coords.length < 2) return;
+
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: coords },
+        properties: {
+          name: tags.name || '',
+          ref: ref,
+          highway: tags.highway || '',
+          road_type: /^G/i.test(ref) ? 'national' : 'provincial'
+        }
+      });
+    });
+
+    return { type: 'FeatureCollection', features };
+  }
+
+  function renderRoads(geojson) {
+    const nationalLayer = L.geoJSON(geojson, {
+    const features = [];
+    data.elements.forEach(el => {
+      if (el.type !== 'way') return;
+      const tags = el.tags || {};
+      const ref = (tags.ref || '').trim();
+      if (!ref || !/^[GS]\d+/i.test(ref)) return;
+
+      const coords = el.nodes.map(id => nodes[id]).filter(Boolean);
+      if (coords.length < 2) return;
+
+      features.push({
+        type: 'Feature',
+        geometry: { type: 'LineString', coordinates: coords },
       const ref = (tags.ref || '').trim();
       if (!ref || !/^[GS]\d+/i.test(ref)) return;
 
